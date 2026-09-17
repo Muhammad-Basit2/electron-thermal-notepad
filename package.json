@@ -1,0 +1,34 @@
+{
+  "name": "thermal-notepad",
+  "version": "1.0.0",
+  "description": "Thermal printer notepad desktop application",
+  "main": "main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "build": {
+    "appId": "com.thermalnotepad.app",
+    "productName": "Thermal Notepad",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "icon.png"
+    },
+    "mac": {
+      "icon": "icon.png"
+    },
+    "linux": {
+      "icon": "icon.png"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.4.1"
+  }
+}

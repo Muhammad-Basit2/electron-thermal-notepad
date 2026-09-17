@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thermal Notepad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Kalam:wght@700&family=Patrick+Hand&family=Roboto+Mono&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      height: 100vh;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 280px;
+      background-color: #252526;
+      border-right: 1px solid #3c3c3c;
+      padding: 18px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+    .sidebar h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #858585;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    label { font-size: 12px; color: #cccccc; display: flex; justify-content: space-between; }
+    select, input[type="text"] {
+      padding: 8px;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      border: 1px solid #3c3c3c;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+    }
+    input[type="range"] { accent-color: #0e639c; cursor: pointer; }
+    input[type="file"] { font-size: 11px; color: #aaa; }
+    select:focus, input[type="text"]:focus { border-color: #0e639c; }
+
+    .logo-preview-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 2px;
+    }
+    .logo-preview {
+      max-width: 50px;
+      max-height: 35px;
+      object-fit: contain;
+      border: 1px dashed #555;
+      display: none;
+    }
+    .remove-logo-btn {
+      background: #e51400;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .toast-msg {
+      font-size: 11px;
+      color: #4caf50;
+      text-align: center;
+      display: none;
+      margin-top: 2px;
+    }
+
+    .btn-group {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    button.action-btn {
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .save-btn { background-color: #2e7d32; color: #ffffff; }
+    .save-btn:hover { background-color: #388e3c; }
+    .preview-btn { background-color: #3c3c3c; color: #ffffff; }
+    .preview-btn:hover { background-color: #505050; }
+    .print-btn { background-color: #0e639c; color: #ffffff; }
+    .print-btn:hover { background-color: #1177bb; }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+    }
+    textarea {
+      flex: 1;
+      resize: none;
+      padding: 16px;
+      font-size: 22px;
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      border: 1px solid #3c3c3c;
+      border-radius: 6px;
+      outline: none;
+      line-height: 1.4;
+      pointer-events: auto !important;
+      user-select: text !important;
+    }
+    textarea:focus { border-color: #0e639c; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #333;
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+    .receipt-paper {
+      background: #ffffff;
+      color: #000000;
+      width: 300px;
+      padding: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      font-size: 18px;
+      line-height: 1.3;
+      white-space: pre-wrap;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    .receipt-logo {
+      display: block;
+      margin: 0 auto 10px auto;
+      object-fit: contain;
+      filter: grayscale(100%) contrast(200%);
+    }
+    .receipt-header {
+      text-align: center;
+      font-weight: bold;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+    }
+    .receipt-footer {
+      text-align: center;
+      border-top: 1px dashed #000;
+      margin-top: 10px;
+      padding-top: 5px;
+      font-size: 14px;
+    }
+    .receipt-timestamp {
+      font-size: 11px;
+      text-align: center;
+      margin-top: 4px;
+    }
+    .close-btn { background-color: #e51400; color: white; width: 100%; }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <h3>Settings</h3>
+
+    <div class="form-group">
+      <label for="fontSelect">Font Style</label>
+      <select id="fontSelect">
+        <option value="'Caveat', cursive">Caveat (Handwriting)</option>
+        <option value="'Patrick Hand', cursive">Patrick Hand (Clean Writing)</option>
+        <option value="'Kalam', cursive">Kalam (Marker Style)</option>
+        <option value="'Dancing Script', cursive">Dancing Script (Cursive)</option>
+        <option value="'Roboto Mono', monospace">Monospace (Standard)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="logoInput">Top Logo (Image)</label>
+      <input type="file" id="logoInput" accept="image/*">
+      <div class="logo-preview-container">
+        <img id="logoPreview" class="logo-preview" alt="Logo Preview">
+        <button id="removeLogoBtn" type="button" class="remove-logo-btn">Remove</button>
+      </div>
+    </div>
+
+    <div class="form-group" id="logoSizeGroup" style="display: none;">
+      <label for="logoSize">Logo Size: <span id="logoSizeVal">60px</span></label>
+      <input type="range" id="logoSize" min="30" max="150" value="60">
+    </div>
+
+    <div class="form-group">
+      <label for="headerInput">Header Text</label>
+      <input type="text" id="headerInput" placeholder="Enter header...">
+    </div>
+
+    <div class="form-group">
+      <label for="footerInput">Footer Text</label>
+      <input type="text" id="footerInput" placeholder="Enter footer...">
+    </div>
+
+    <div class="toast-msg" id="toastMsg">✓ Saved indefinitely until changed</div>
+
+    <div class="btn-group">
+      <button class="action-btn save-btn" id="saveSettingsBtn" type="button">Save Settings</button>
+      <button class="action-btn preview-btn" id="previewBtn" type="button">Preview Print</button>
+      <button class="action-btn print-btn" id="printBtn" type="button">Print to Thermal</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <textarea id="note" placeholder="Type your note here..."></textarea>
+  </main>
+
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal-content">
+      <div class="receipt-paper" id="receiptPaper">
+        <img id="previewLogo" class="receipt-logo" style="display:none;" alt="Logo">
+        <div class="receipt-header" id="previewHeader"></div>
+        <div id="previewBody"></div>
+        <div class="receipt-footer" id="previewFooter"></div>
+        <div class="receipt-timestamp" id="previewTimestamp"></div>
+      </div>
+      <button class="action-btn close-btn" id="closePreviewBtn" type="button">Close Preview</button>
+    </div>
+  </div>
+
+  <script>
+    const fontSelect = document.getElementById('fontSelect');
+    const noteTextarea = document.getElementById('note');
+    const headerInput = document.getElementById('headerInput');
+    const footerInput = document.getElementById('footerInput');
+    const logoInput = document.getElementById('logoInput');
+    const logoSize = document.getElementById('logoSize');
+    const logoSizeVal = document.getElementById('logoSizeVal');
+    const logoSizeGroup = document.getElementById('logoSizeGroup');
+    const logoPreview = document.getElementById('logoPreview');
+    const removeLogoBtn = document.getElementById('removeLogoBtn');
+    const previewModal = document.getElementById('previewModal');
+    const toastMsg = document.getElementById('toastMsg');
+
+    let currentLogoBase64 = '';
+
+    // Load persistent settings from LocalStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      fontSelect.value = localStorage.getItem('thermal_font') || "'Caveat', cursive";
+      noteTextarea.style.fontFamily = fontSelect.value;
+      headerInput.value = localStorage.getItem('thermal_header') ?? '--- NOTE PRINT ---';
+      footerInput.value = localStorage.getItem('thermal_footer') ?? 'Thank You!';
+      
+      const savedLogoSize = localStorage.getItem('thermal_logo_size') || '60';
+      logoSize.value = savedLogoSize;
+      logoSizeVal.textContent = savedLogoSize + 'px';
+
+      currentLogoBase64 = localStorage.getItem('thermal_logo') || '';
+      if (currentLogoBase64) {
+        showLogoPreview(currentLogoBase64);
+      }
+
+      // Ensure focus stays on notepad area
+      noteTextarea.focus();
+    });
+
+    logoSize.addEventListener('input', (e) => {
+      logoSizeVal.textContent = `${e.target.value}px`;
+    });
+
+    fontSelect.addEventListener('change', (e) => {
+      noteTextarea.style.fontFamily = e.target.value;
+    });
+
+    logoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          currentLogoBase64 = evt.target.result;
+          showLogoPreview(currentLogoBase64);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    removeLogoBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentLogoBase64 = '';
+      logoInput.value = '';
+      logoPreview.style.display = 'none';
+      removeLogoBtn.style.display = 'none';
+      logoSizeGroup.style.display = 'none';
+    });
+
+    function showLogoPreview(src) {
+      logoPreview.src = src;
+      logoPreview.style.display = 'block';
+      removeLogoBtn.style.display = 'inline-block';
+      logoSizeGroup.style.display = 'flex';
+    }
+
+    // Fixed Save Settings Handler
+    document.getElementById('saveSettingsBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      localStorage.setItem('thermal_font', fontSelect.value);
+      localStorage.setItem('thermal_header', headerInput.value);
+      localStorage.setItem('thermal_footer', footerInput.value);
+      localStorage.setItem('thermal_logo_size', logoSize.value);
+      
+      if (currentLogoBase64) {
+        localStorage.setItem('thermal_logo', currentLogoBase64);
+      } else {
+        localStorage.removeItem('thermal_logo');
+      }
+
+      // Toast notification instead of blocking alert dialog
+      toastMsg.style.display = 'block';
+      setTimeout(() => { toastMsg.style.display = 'none'; }, 3000);
+
+      // Restore focus to notepad input
+      noteTextarea.focus();
+    });
+
+    function getPrintData() {
+      return {
+        content: noteTextarea.value,
+        fontFamily: fontSelect.value,
+        header: headerInput.value,
+        footer: footerInput.value,
+        logo: currentLogoBase64,
+        logoSize: logoSize.value
+      };
+    }
+
+    document.getElementById('previewBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      const data = getPrintData();
+      if (!data.content.trim()) {
+        alert('Please enter some text to preview.');
+        return;
+      }
+
+      document.getElementById('receiptPaper').style.fontFamily = data.fontFamily;
+
+      const previewLogo = document.getElementById('previewLogo');
+      if (data.logo) {
+        previewLogo.src = data.logo;
+        previewLogo.style.maxHeight = `${data.logoSize}px`;
+        previewLogo.style.display = 'block';
+      } else {
+        previewLogo.style.display = 'none';
+      }
+
+      document.getElementById('previewHeader').textContent = data.header;
+      document.getElementById('previewHeader').style.display = data.header ? 'block' : 'none';
+
+      document.getElementById('previewBody').textContent = data.content;
+
+      document.getElementById('previewFooter').textContent = data.footer;
+      document.getElementById('previewFooter').style.display = data.footer ? 'block' : 'none';
+
+      document.getElementById('previewTimestamp').textContent = new Date().toLocaleString();
+
+      previewModal.style.display = 'flex';
+    });
+
+    document.getElementById('closePreviewBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      previewModal.style.display = 'none';
+      noteTextarea.focus();
+    });
+
+    document.getElementById('printBtn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const data = getPrintData();
+      if (!data.content.trim()) {
+        alert('Please enter some text to print.');
+        return;
+      }
+      await window.electronAPI.printThermal(data);
+    });
+  </script>
+</body>
+</html>
