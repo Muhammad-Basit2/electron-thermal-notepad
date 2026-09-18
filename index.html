@@ -5,7 +5,7 @@
   <title>Thermal Notepad</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Kalam:wght@700&family=Patrick+Hand&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Dancing+Script:wght@600&family=Kalam:wght@700&family=Noto+Nastaliq+Urdu:wght@400..700&family=Patrick+Hand&family=Roboto+Mono&display=swap" rel="stylesheet">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -123,7 +123,7 @@
       border: 1px solid #3c3c3c;
       border-radius: 6px;
       outline: none;
-      line-height: 1.4;
+      line-height: 1.8;
       pointer-events: auto !important;
       user-select: text !important;
     }
@@ -155,7 +155,7 @@
       padding: 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       font-size: 18px;
-      line-height: 1.3;
+      line-height: 1.8;
       white-space: pre-wrap;
       max-height: 60vh;
       overflow-y: auto;
@@ -196,6 +196,7 @@
     <div class="form-group">
       <label for="fontSelect">Font Style</label>
       <select id="fontSelect">
+        <option value="'Noto Nastaliq Urdu', serif">Noto Nastaliq Urdu (اردو)</option>
         <option value="'Caveat', cursive">Caveat (Handwriting)</option>
         <option value="'Patrick Hand', cursive">Patrick Hand (Clean Writing)</option>
         <option value="'Kalam', cursive">Kalam (Marker Style)</option>
@@ -270,10 +271,25 @@
 
     let currentLogoBase64 = '';
 
+    function applyTextDirection(fontValue) {
+      const isUrdu = fontValue.includes('Noto Nastaliq Urdu');
+      const dir = isUrdu ? 'rtl' : 'ltr';
+      
+      noteTextarea.style.fontFamily = fontValue;
+      noteTextarea.style.direction = dir;
+      
+      const receiptPaper = document.getElementById('receiptPaper');
+      if (receiptPaper) {
+        receiptPaper.style.fontFamily = fontValue;
+        receiptPaper.style.direction = dir;
+      }
+    }
+
     // Load persistent settings from LocalStorage
     window.addEventListener('DOMContentLoaded', () => {
-      fontSelect.value = localStorage.getItem('thermal_font') || "'Caveat', cursive";
-      noteTextarea.style.fontFamily = fontSelect.value;
+      fontSelect.value = localStorage.getItem('thermal_font') || "'Noto Nastaliq Urdu', serif";
+      applyTextDirection(fontSelect.value);
+
       headerInput.value = localStorage.getItem('thermal_header') ?? '--- NOTE PRINT ---';
       footerInput.value = localStorage.getItem('thermal_footer') ?? 'Thank You!';
       
@@ -286,7 +302,6 @@
         showLogoPreview(currentLogoBase64);
       }
 
-      // Ensure focus stays on notepad area
       noteTextarea.focus();
     });
 
@@ -295,7 +310,7 @@
     });
 
     fontSelect.addEventListener('change', (e) => {
-      noteTextarea.style.fontFamily = e.target.value;
+      applyTextDirection(e.target.value);
     });
 
     logoInput.addEventListener('change', (e) => {
@@ -326,7 +341,6 @@
       logoSizeGroup.style.display = 'flex';
     }
 
-    // Fixed Save Settings Handler
     document.getElementById('saveSettingsBtn').addEventListener('click', (e) => {
       e.preventDefault();
       
@@ -341,11 +355,9 @@
         localStorage.removeItem('thermal_logo');
       }
 
-      // Toast notification instead of blocking alert dialog
       toastMsg.style.display = 'block';
       setTimeout(() => { toastMsg.style.display = 'none'; }, 3000);
 
-      // Restore focus to notepad input
       noteTextarea.focus();
     });
 
@@ -368,7 +380,7 @@
         return;
       }
 
-      document.getElementById('receiptPaper').style.fontFamily = data.fontFamily;
+      applyTextDirection(data.fontFamily);
 
       const previewLogo = document.getElementById('previewLogo');
       if (data.logo) {
